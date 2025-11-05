@@ -68,11 +68,5 @@ FROM (
     FROM bronze.crm_cust_info
 ) t
 WHERE flag_last = 1
-ON DUPLICATE KEY UPDATE
-    cst_key = VALUES(cst_key),
-    cst_firstname = VALUES(cst_firstname),
-    cst_lastname = VALUES(cst_lastname),
-    cst_marital_status = VALUES(cst_marital_status),
-    cst_gndr = VALUES(cst_gndr),
-    cst_create_date = VALUES(cst_create_date);
+
 
