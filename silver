@@ -1,1 +1,78 @@
+/********************************************************************************************
+ 🥈 SILVER LAYER | DATA CLEANING & STANDARDIZATION
+ -------------------------------------------------------------------------------------------
+ 📌 Description:
+   The Silver Layer is the *cleansed and standardized zone* of the data warehouse.
+   It transforms raw Bronze Layer data into consistent, validated, and deduplicated tables.
+   This data is now ready for analytical modeling in the Gold Layer.
+
+ 📂 Purpose:
+   - Clean and standardize customer, product, and sales data.
+   - Remove duplicates and retain the most recent record.
+   - Normalize categorical data (e.g., gender, status).
+   - Prepare data for business consumption in the Gold Layer.
+
+ ⚙️ Key Transformations:
+   - TRIM() to remove leading/trailing spaces.
+   - CASE and UPPER() for categorical standardization.
+   - ROW_NUMBER() window function for deduplication.
+   - ON DUPLICATE KEY UPDATE for incremental upserts.
+
+ 🧠 Next Step:
+   Data from Silver → Gold Layer for analytics, reporting, and BI dashboards.
+
+ Author     : Tawheed Mir
+ Database   : MySQL
+ Layer Type : Silver (Clean Zone)
+********************************************************************************************/
+
+-- CREATE DATABASE silver;
+-- USE silver;
+
+-- Create cleaned customer info table
+CREATE TABLE IF NOT EXISTS silver.crm_cust_info_silver (
+    cst_id INT PRIMARY KEY,
+    cst_key VARCHAR(50),
+    cst_firstname VARCHAR(50),
+    cst_lastname VARCHAR(50),
+    cst_marital_status VARCHAR(20),
+    cst_gndr VARCHAR(10),
+    cst_create_date DATE
+);
+
+-- Transformation & data insertion
+INSERT INTO silver.crm_cust_info_silver (
+    cst_id,
+    cst_key,
+    cst_firstname,
+    cst_lastname,
+    cst_marital_status,
+    cst_gndr,
+    cst_create_date
+)
+SELECT
+    cst_id,
+    cst_key,
+    TRIM(cst_firstname) AS cst_firstname,
+    TRIM(cst_lastname) AS cst_lastname,
+    cst_marital_status,
+    CASE
+        WHEN UPPER(TRIM(cst_gndr)) = 'F' THEN 'Female'
+        WHEN UPPER(TRIM(cst_gndr)) = 'M' THEN 'Male'
+        ELSE 'NA'
+    END AS cst_gndr,
+    cst_create_date
+FROM (
+    SELECT *,
+           ROW_NUMBER() OVER (PARTITION BY cst_id ORDER BY cst_create_date DESC) AS flag_last
+    FROM bronze.crm_cust_info
+) t
+WHERE flag_last = 1
+ON DUPLICATE KEY UPDATE
+    cst_key = VALUES(cst_key),
+    cst_firstname = VALUES(cst_firstname),
+    cst_lastname = VALUES(cst_lastname),
+    cst_marital_status = VALUES(cst_marital_status),
+    cst_gndr = VALUES(cst_gndr),
+    cst_create_date = VALUES(cst_create_date);
 
