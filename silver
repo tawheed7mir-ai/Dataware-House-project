@@ -261,3 +261,51 @@ SELECT
 FROM bronze.erp_loc_a101;
 
 
+
+/******************************************************************************************
+🥈 SILVER LAYER - ERP CUSTOMER DATA
+AUTHOR: Tawheed Mir
+PURPOSE:
+    Transform ERP customer data from the Bronze layer into the Silver layer.
+    Cleans invalid values, standardizes formats, and ensures consistency.
+
+TRANSFORMATION LOGIC:
+    - Removes prefix 'NAS' from customer IDs
+    - Replaces future birthdates with NULL
+    - Normalizes gender values to 'Male', 'Female', or 'N/A'
+******************************************************************************************/
+
+
+-- Step 1️⃣: Create Silver table for ERP Customer Data
+CREATE TABLE IF NOT EXISTS silver.erp_cust_az12 (
+    cid VARCHAR(50),
+    bdate DATE,
+    gen VARCHAR(40)
+);
+
+-- Step 2️⃣: Transform and insert data from Bronze → Silver
+INSERT INTO silver.erp_cust_az12 (cid, bdate, gen)
+SELECT
+    -- 🆔 Clean Customer ID
+    CASE 
+        WHEN cid LIKE 'NAS%' THEN SUBSTRING(cid, 4, LENGTH(cid))
+        ELSE cid 
+    END AS cid,
+
+    -- 🎂 Validate Birthdate
+    CASE 
+        WHEN bdate > CURDATE() THEN NULL 
+        ELSE bdate 
+    END AS bdate,
+
+    -- 🚻 Standardize Gender
+    CASE 
+        WHEN UPPER(TRIM(gen)) IN ('F', 'FEMALE') THEN 'Female'
+        WHEN UPPER(TRIM(gen)) IN ('M', 'MALE') THEN 'Male'
+        ELSE 'N/A'
+    END AS gen
+
+FROM bronze.erp_cust_az12;
+
+
+
