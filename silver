@@ -70,3 +70,85 @@ FROM (
 WHERE flag_last = 1
 
 
+
+/******************************************************************************************
+ 🥈 SILVER LAYER - CRM SALES DETAILS
+ PURPOSE:
+    This script creates and transforms the CRM Sales Details table 
+    from the Bronze layer into the Silver layer in a MySQL Data Warehouse.
+
+    🧩 Bronze → Silver Transformation Summary:
+      - Converts raw INT date values (YYYYMMDD) to DATE datatype
+      - Cleans invalid or malformed date entries
+      - Fixes incorrect sales and price values
+      - Ensures all columns are consistent and ready for analytics
+
+******************************************************************************************/
+
+-- Step 1️⃣: Create the Silver database (if not already exists)
+CREATE DATABASE IF NOT EXISTS silver;
+USE silver;
+
+-- Step 2️⃣: Create the Silver table for cleaned Sales Details
+CREATE TABLE IF NOT EXISTS crm_sales_details_silver (
+    sls_ord_num VARCHAR(100),
+    sls_prd_key VARCHAR(50),
+    sls_cust_id INT,
+    sls_order_dt DATE,
+    sls_ship_dt DATE,
+    sls_due_dt DATE,
+    sls_sales INT,
+    sls_quantity INT,
+    sls_price INT
+);
+
+-- Step 3️⃣: Transform and insert clean data from Bronze layer
+INSERT INTO silver.crm_sales_details_silver (
+    sls_ord_num,
+    sls_prd_key,
+    sls_cust_id,
+    sls_order_dt,
+    sls_ship_dt,
+    sls_due_dt,
+    sls_sales,
+    sls_quantity,
+    sls_price
+)
+SELECT 
+    sls_ord_num,
+    sls_prd_key,
+    sls_cust_id,
+
+    -- ✅ Clean & Convert Order Date
+    CASE  
+        WHEN sls_order_dt = 0 OR LENGTH(sls_order_dt) != 8 THEN NULL
+        ELSE STR_TO_DATE(CAST(sls_order_dt AS CHAR), '%Y%m%d')
+    END AS sls_order_dt,
+
+    -- ✅ Clean & Convert Ship Date
+    CASE  
+        WHEN sls_ship_dt = 0 OR LENGTH(sls_ship_dt) != 8 THEN NULL
+        ELSE STR_TO_DATE(CAST(sls_ship_dt AS CHAR), '%Y%m%d')
+    END AS sls_ship_dt,
+
+    -- ✅ Clean & Convert Due Date
+    CASE  
+        WHEN sls_due_dt = 0 OR LENGTH(sls_due_dt) != 8 THEN NULL
+        ELSE STR_TO_DATE(CAST(sls_due_dt AS CHAR), '%Y%m%d')
+    END AS sls_due_dt,
+
+    -- ✅ Fix incorrect sales values
+    CASE 
+        WHEN sls_sales IS NULL OR sls_sales != sls_quantity * ABS(sls_price)
+        THEN sls_quantity * ABS(sls_price)
+        ELSE sls_sales 
+    END AS sls_sales,
+
+    -- ✅ Quantity remains as-is
+    sls_quantity,
+
+    -- ✅ Fix invalid or negative prices
+    CASE 
+        W
+
+
