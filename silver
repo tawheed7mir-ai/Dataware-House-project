@@ -69,6 +69,77 @@ FROM (
 ) t
 WHERE flag_last = 1
 
+/******************************************************************************************
+ 🥈 SILVER LAYER - CRM PRODUCT INFORMATION
+ PURPOSE:
+    This script transforms and loads product information from the Bronze layer
+    into the Silver layer in a MySQL Data Warehouse.
+
+    🧩 Transformation Logic:
+      - Derives a new Category ID (`cat_id`) from `prd_key`
+      - Cleans product line codes into descriptive names
+      - Converts NULL costs to 0
+      - Converts datetime columns to DATE
+      - Derives `prd_end_dt` using window function (LEAD)
+******************************************************************************************/
+
+-- Step 2️⃣: Create the Silver table for cleaned Product Info
+CREATE TABLE IF NOT EXISTS silver.crm_prd_info (
+    prd_id INT,
+    cat_id VARCHAR(50),
+    prd_key VARCHAR(50),
+    prd_nm VARCHAR(100),
+    prd_cost INT,
+    prd_line VARCHAR(100),
+    prd_start_dt DATE,
+    prd_end_dt DATE
+);
+
+-- Step 3️⃣: Transform and Insert data from Bronze → Silver
+INSERT INTO silver.crm_prd_info (
+    prd_id,
+    cat_id,
+    prd_key,
+    prd_nm,
+    prd_cost,
+    prd_line,
+    prd_start_dt,
+    prd_end_dt
+)
+SELECT 
+    prd_id,
+
+    -- 🆕 Extract Category ID from product key
+    REPLACE(SUBSTRING(prd_key, 1, 5), '-', '_') AS cat_id,
+
+    -- 🆔 Clean product key by removing category prefix
+    SUBSTRING(prd_key, 7, LENGTH(prd_key)) AS prd_key,
+
+    prd_nm,
+
+    -- 💰 Replace NULL product cost with 0
+    IFNULL(prd_cost, 0) AS prd_cost,
+
+    -- 🏷️ Map product line codes to readable names
+    CASE UPPER(TRIM(prd_line))
+        WHEN 'M' THEN 'Mountain'
+        WHEN 'R' THEN 'Road'
+        WHEN 'S' THEN 'Other Tales'
+        WHEN 'T' THEN 'Touring'
+        ELSE 'N/A'
+    END AS prd_line,
+
+    -- 🗓️ Convert product start date
+    CAST(prd_start_dt AS DATE) AS prd_start_dt,
+
+    -- 🗓️ Derive product end date using LEAD function
+    CAST(LEAD(prd_start_dt) OVER (PARTITION BY prd_key ORDER BY prd_start_dt) - INTERVAL 1 DAY AS DATE) AS prd_end_dt
+
+FROM bronze.crm_prd_info;
+
+
+
+
 
 
 /******************************************************************************************
@@ -85,12 +156,8 @@ WHERE flag_last = 1
 
 ******************************************************************************************/
 
--- Step 1️⃣: Create the Silver database (if not already exists)
-CREATE DATABASE IF NOT EXISTS silver;
-USE silver;
-
--- Step 2️⃣: Create the Silver table for cleaned Sales Details
-CREATE TABLE IF NOT EXISTS crm_sales_details_silver (
+-- Step 1: Create the Silver table for cleaned Sales Details
+CREATE TABLE IF NOT EXISTS silver.crm_sales_details(
     sls_ord_num VARCHAR(100),
     sls_prd_key VARCHAR(50),
     sls_cust_id INT,
@@ -103,7 +170,7 @@ CREATE TABLE IF NOT EXISTS crm_sales_details_silver (
 );
 
 -- Step 3️⃣: Transform and insert clean data from Bronze layer
-INSERT INTO silver.crm_sales_details_silver (
+INSERT INTO silver.crm_sales_details(
     sls_ord_num,
     sls_prd_key,
     sls_cust_id,
@@ -148,7 +215,12 @@ SELECT
     sls_quantity,
 
     -- ✅ Fix invalid or negative prices
-    CASE 
-        W
+      CASE 
+        WHEN sls_price IS NULL OR sls_price <= 0
+        THEN sls_sales / NULLIF(sls_quantity, 0)
+        ELSE sls_price
+    END AS sls_price
+
+FROM bronze.crm_sales_details;
 
 
