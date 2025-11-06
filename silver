@@ -224,3 +224,40 @@ SELECT
 FROM bronze.crm_sales_details;
 
 
+
+
+/******************************************************************************************
+🥈 SILVER LAYER - ERP LOCATION DATA
+AUTHOR: Tawheed Mir
+PURPOSE:
+    Transform ERP location data from Bronze layer into the Silver layer.
+    Cleans and standardizes country codes and customer IDs for consistency.
+
+TRANSFORMATION LOGIC:
+    - Removes hyphens from customer ID (cid)
+    - Expands country abbreviations to full names
+    - Handles null or blank country values
+******************************************************************************************/
+
+CREATE DATABASE IF NOT EXISTS silver;
+USE silver;
+
+-- Step 1️⃣: Create Silver table
+CREATE TABLE IF NOT EXISTS erp_loc_a101 (
+    cid VARCHAR(50),
+    cntry VARCHAR(50)
+);
+
+-- Step 2️⃣: Transform and insert clean data
+INSERT INTO silver.erp_loc_a101 (cid, cntry)
+SELECT
+    REPLACE(cid, '-', '') AS cid,
+    CASE 
+        WHEN TRIM(cntry) = 'DE' THEN 'Germany'
+        WHEN TRIM(cntry) IN ('US', 'USA') THEN 'United States'
+        WHEN TRIM(cntry) = '' OR TRIM(cntry) IS NULL THEN 'N/A'
+        ELSE TRIM(cntry)
+    END AS cntry
+FROM bronze.erp_loc_a101;
+
+
