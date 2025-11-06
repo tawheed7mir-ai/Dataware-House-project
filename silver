@@ -309,3 +309,38 @@ FROM bronze.erp_cust_az12;
 
 
 
+
+/******************************************************************************************
+🥈 SILVER LAYER - ERP PRODUCT CATEGORY DATA
+AUTHOR: Tawheed Mir
+PURPOSE:
+    Promote ERP product category and maintenance data from the Bronze layer
+    to the Silver layer without transformation, as data quality is already sufficient.
+
+NOTES:
+    - No transformation required; structure and values are standardized.
+    - Table used for joining with other ERP or CRM product details in Silver/Gold layers.
+******************************************************************************************/
+
+
+
+-- Step 1️⃣: Create Silver table for ERP Product Category Data
+CREATE TABLE IF NOT EXISTS silver.erp_px_ct_g1v2 (
+    id VARCHAR(50),
+    cat VARCHAR(50),
+    subcat VARCHAR(50),
+    maintenance VARCHAR(50)
+);
+
+-- Step 2️⃣: Directly insert clean data from Bronze → Silver
+INSERT INTO silver.erp_px_ct_g1v2 (id, cat, subcat, maintenance)
+SELECT 
+    id,
+    cat,
+    subcat,
+    maintenance
+FROM bronze.erp_px_ct_g1v2;
+
+
+
+
