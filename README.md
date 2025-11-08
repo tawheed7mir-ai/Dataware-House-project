@@ -102,7 +102,7 @@ Optimized for business intelligence, trend analysis, and reporting tools
 Tawheed Mir
 💼 Aspiring Data Analyst & SQL Enthusiast
 📊 Passionate about Data Modeling, Warehousing, and Analytics
-🔗LinkedIn : linkedin.com/in/tawheed-mir-881009250
+🔗LinkedIn : https://linkedin.com/in/tawheed-mir-881009250
 gitHub: https://github.com/tawheed7mir-ai
 
 
