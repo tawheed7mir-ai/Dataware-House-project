@@ -75,3 +75,34 @@ dim_products → integrates CRM products with ERP categories
 fact_sales → central fact table connecting sales with customers & products
 
 Optimized for business intelligence, trend analysis, and reporting tools
+
+
+
+              ┌────────────────────┐
+              │   dim_customers     │
+              └─────────┬───────────┘
+                        │
+                        │
+   ┌──────────────┐     ▼     ┌──────────────┐
+   │ dim_products  │──────────▶  fact_sales  │
+   └──────────────┘           └──────────────┘
+
+| Component       | Technology                 |
+| --------------- | -------------------------- |
+| Database        | MySQL                      |
+| Data Model      | Star Schema                |
+| Layers          | Bronze → Silver → Gold     |
+| ETL Process     | SQL Transformation Scripts |
+| Version Control | Git + GitHub               |
+| Analytics       | SQL-based Data Exploration |
+
+
+👤 Author
+
+Tawheed Mir
+💼 Aspiring Data Analyst & SQL Enthusiast
+📊 Passionate about Data Modeling, Warehousing, and Analytics
+🔗LinkedIn : linkedin.com/in/tawheed-mir-881009250
+gitHub: https://github.com/tawheed7mir-ai
+
+
